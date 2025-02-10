@@ -10,6 +10,8 @@
 //For smaller hardware rich devices( even though everything has double, we  might try and do generic programming using void pointer.
 //Simple is better than  complex. We could have multiple cases of switch but why bother? We can just go ahead with double and use it forever.
 //The use of long double is not useful. It makes no sense as the 32-bit arm cortex processor doesn't support it. There's limited hardware and it makes no sense to waste expensive compute.
+//Even if we go with it, it doesn't work the 32bit architecture is useless here. long double is literally a synonym with double.
+
 //On the other end, why bother using float, when you can get greater precision for relatively cheaper hardware ?
 
 typedef struct {
