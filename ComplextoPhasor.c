@@ -1,10 +1,16 @@
 // Code by Arush Sinha for a function to turn complex values to phasor form.
+//Version 1
+//For instrumentation Coursework
 //Relevant libraries
+//as13824@ic.ac.uk
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 // A struct of type Phasor is made, this has two double parts magnitude and phase in degrees and rad. Double precision is used because it's advantageous for precision, and we can afford cost in hardware.
 //For smaller hardware rich devices( even though everything has double, we  might try and do generic programming using void pointer.
+//Simple is better than  complex. We could have multiple cases of switch but why bother? We can just go ahead with double and use it forever.
+//The use of long double is not useful. It makes no sense as the 32-bit arm cortex processor doesn't support it. There's limited hardware and it makes no sense to waste expensive compute.
+//On the other end, why bother using float, when you can get greater precision for relatively cheaper hardware ?
 
 typedef struct {
     double magnitude;
