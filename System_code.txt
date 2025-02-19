@@ -1,0 +1,238 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2025 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
+#include <First_Order_IIR_Filter.h>
+#include <stdio.h>
+#include<math.h>
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+#define SAMPLE_SIZE 1024// Look at imaginary values save compute overhead
+#define SAMPLE_RATE 200000// Sample rate of adc in stm32
+#define Cut_Off_Frequency 1// This is the cut-off frequency, can be modified later.
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+
+/* USER CODE BEGIN PV */
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+/* USER CODE BEGIN PFP */
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
+	SystemClock_Config();
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+
+  /* Configure the system clock */
+
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  /* USER CODE BEGIN 2 */
+
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while(1)
+{
+    /* USER CODE END WHILE */
+	  /* USER CODE BEGIN Init */
+	  FirstOrderIIR f1, f2;
+	  float Vs[SAMPLE_SIZE];
+	  float Vref[SAMPLE_SIZE];
+	  float CleanVref[SAMPLE_SIZE];
+	  float CleanVs[SAMPLE_SIZE];
+	  float difference[SAMPLE_SIZE];
+	  // Calculate alpha for 1 Hz cutoff
+	  float omega_c = (2.0f * 3.14159265359f * Cut_Off_Frequency) / SAMPLE_RATE;
+	  float alpha = omega_c / (omega_c + 1.0f);
+	  float sum = 0;
+	  // Initialize filters for both signals
+	  FirstOrderIIRFilter_Init(&f1, alpha);
+	  FirstOrderIIRFilter_Init(&f2, alpha);
+
+	  // Generate test signal (for simulation)
+
+
+	  // Apply the filter to the signals and compute the difference
+	  for (int i = 0; i < SAMPLE_SIZE; i++) {
+	      CleanVref[i] = FirstOrderIRR_Calculate(&f1, Vref[i]);
+	      CleanVs[i] = FirstOrderIRR_Calculate(&f2, Vs[i]);
+
+	      // Compute the difference
+	      difference[i] =  (CleanVref[i] - CleanVs[i]);
+	  sum = sum + difference[i];
+
+	  }
+
+	  float average= sum/SAMPLE_SIZE;
+	  // Classify components based on difference
+	  if (average < 0.001f) {
+	      printf("R\n"); // Resistor
+	  } else if (average > 0) {
+	      printf("C\n"); // Capacitor
+	  } else {
+	      printf("L\n"); // Inductor
+	  }
+
+
+	  return 0;
+	  }
+	    /* USER CODE END Init */
+
+
+
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
+
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  /** Configure the main internal regulator output voltage
+  */
+  __HAL_RCC_PWR_CLK_ENABLE();
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/* USER CODE BEGIN 4 */
+
+/* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
+  {
+  }
+  /* USER CODE END Error_Handler_Debug */
+} void FirstOrderIIRFilter_Init(FirstOrderIIR *filter, float alpha)
+{
+if(alpha<0.0f){alpha=0.0f;}
+else if (alpha>1.0f){alpha=1.0f;}
+else {filter->alpha=alpha;}
+filter->out=0.0f;
+}
+float FirstOrderIRR_Calculate(FirstOrderIIR *filter, float in)
+{
+
+filter->out=(1.0f-filter->alpha)*in+(filter->alpha)*filter->out;
+
+
+return filter->out;
+}
+
+#ifdef  USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */
